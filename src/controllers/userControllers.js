@@ -1,6 +1,7 @@
 const SQLiteConnection = require("../database/sqlite")
 const bcrypt = require("bcryptjs");
 const AppError = require("../utils/AppError");
+const { use } = require("../routes");
 
 class userControllers {
 
@@ -43,19 +44,26 @@ async update(request, response){
     const {name, email, password} = request.body;
     const {id} = request.params;
     const database = await SQLiteConnection();
-    //const crypto = await bcrypt.hash(password, 8)    
+    //const crypto = await bcrypt.hash(password, 8)  
+    let Email;  
 
+    if(email == undefined){
+        Email = email
+    }else {
+        Email = email.toLowerCase()
+    }
+    
     const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
-  
+
 
     if(!user){
         throw new AppError(`Não existe esse usuário de numero ${id}!`)
     }
 
-    const checkEmail = await database.get("SELECT * FROM users WHERE email = (?)", [email])
+    const checkEmail = await database.get("SELECT * FROM users WHERE email = (?)", [Email])
    
 
-    if(checkEmail && user.email === email) {
+    if(checkEmail && user.email === Email) {
         throw new AppError("Este email é do seu proprio Usuario")
     }
 
@@ -63,7 +71,13 @@ async update(request, response){
         throw new AppError("Este email já existe cadastrado em outro usuário")
     }
 
-    user.email = email || user.email;
+    
+    if(email === undefined || null){
+        user.email = user.email
+    }else {
+        user.email = email.toLowerCase()
+    }
+   
 
 
     
