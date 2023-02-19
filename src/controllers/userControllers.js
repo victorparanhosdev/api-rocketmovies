@@ -39,34 +39,43 @@ async create(request, response){
 }
 
 async update(request, response){
-    const database = await SQLiteConnection();
+    
     const {name, email, password} = request.body;
-    const Email = email.toString().toLowerCase();
-    //const crypto = await bcrypt.hash(password, 8)
-
     const {id} = request.params;
+    const database = await SQLiteConnection();
+    const Email = email.toString().toLowerCase();
+    //const crypto = await bcrypt.hash(password, 8)    
 
     const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
-    const checkEmail = await database.get("SELECT * FROM users WHERE email = (?)", [Email])
+  
 
     if(!user){
         throw new AppError(`Não existe esse usuário de numero ${id}!`)
     }
 
+    const checkEmail = await database.get("SELECT * FROM users WHERE email = (?)", [Email])
+   
+
     if(checkEmail && user.email === Email) {
         throw new AppError("Este email é do seu proprio Usuario")
     }
+
     if(checkEmail && user.id !== id){
         throw new AppError("Este email já existe cadastrado em outro usuário")
     }
 
+    user.email = Email || user.email;
+
+    console.log(user.email)
+    
     await database.run(`UPDATE users SET 
     name = ?,
     email = ?,
     updated_at = DATETIME('now', 'localtime')
-    WHERE id = ?`, [name, Email, id])
+    WHERE id = ?`, [name, user.email, id]);
+  
 
-    response.send("atualizado com sucesso")
+   return response.send("atualizado com sucesso")
 }
 
 async delete(request, response){
@@ -87,7 +96,6 @@ async delete(request, response){
       
 
 }
-
 
 async show(request, response) {
     const database = await SQLiteConnection();

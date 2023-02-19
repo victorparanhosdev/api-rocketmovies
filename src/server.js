@@ -17,12 +17,14 @@ app.use((error, request, response, next ) =>{
             status: "error",
             message: error.message
         })
+        
     }
-
     return response.status(500).json({
         status: "ERRO INTERNAL",
         message: "Erro do servidor"
     })
+
+ 
 
 
 })
