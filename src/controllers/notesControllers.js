@@ -1,14 +1,19 @@
-const knex = require("../database/knex")
+const knex = require("../database/knex");
+const AppError = require("../utils/AppError");
 
 class notesControllers {
     async create(request, response){
         const {title, description, rating, tags} = request.body;
         const{user_id} = request.params;
 
+        if(Number(rating) > 5 || Number(rating) < 0){
+            throw new AppError("O rating(nota) só é entre 0 a 5")
+        }
+
         const notas = await knex("notas").insert({
             title,
             description,
-            rating,
+            rating: `${rating}/5`,
             user_id: user_id
         })
 
