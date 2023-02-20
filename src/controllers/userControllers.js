@@ -1,7 +1,7 @@
 const SQLiteConnection = require("../database/sqlite")
-const bcrypt = require("bcryptjs");
 const AppError = require("../utils/AppError");
-const { use } = require("../routes");
+const {hash, compare} = require("bcryptjs");
+const knex = require("../database/knex")
 
 class userControllers {
 
@@ -28,7 +28,7 @@ async create(request, response){
     }
 
     
-    const crypto = await bcrypt.hash(password, 8)
+    const crypto = await hash(password, 8)
     await database.run("INSERT INTO users (name, email, password, updated_at) VALUES (?, ?, ?, NULL)", [name, Email, crypto])
 
     response.status(201).json({
@@ -41,15 +41,12 @@ async create(request, response){
 
 async update(request, response){
     
-    const {name, email, password} = request.body;
+    const {name, email, password, old_password} = request.body;
     const {id} = request.params;
-    const database = await SQLiteConnection();
-    //const crypto = await bcrypt.hash(password, 8)  
+    const database = await SQLiteConnection(); 
     let Email;  
 
-    if(email == undefined){
-        Email = email
-    }else {
+    if(email !== undefined){
         Email = email.toLowerCase()
     }
     
@@ -77,15 +74,35 @@ async update(request, response){
     }else {
         user.email = email.toLowerCase()
     }
-   
+     
+    if(name === undefined || null){
+        user.name = user.name
+    }else {
+        user.name = name
+    }  
+    
+    if(password && !old_password){
+        throw new AppError("É necesario digitar a senha antiga")
+    }
+
+    if(password && old_password){
+        const chekPassword = await compare(old_password, user.password)
+        const semCripto = old_password != user.password
+        if(!chekPassword && semCripto ){
+            throw new AppError("Senha incorreta")
+        }
+
+        user.password = await hash(password, 8)
+    }
 
 
     
     await database.run(`UPDATE users SET 
     name = ?,
     email = ?,
+    password = ?,
     updated_at = DATETIME('now', 'localtime')
-    WHERE id = ?`, [name, user.email, id]);
+    WHERE id = ?`, [user.name, user.email, user.password, id]);
   
 
    return response.send("atualizado com sucesso")
@@ -117,12 +134,23 @@ async show(request, response) {
 
     const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
 
+    const notas = await knex("notas").where({user_id: id})
+    const tags = await knex("tags").where({user_id: id})
+
+
 
     if(!user){
        throw new AppError(`O usuario ${id} não existe!`)
     }
 
-    response.json({name: user.name, email: user.email})
+
+    response.json({
+        id,
+        Name: user.name,
+        Email: user.email,
+        notas: notas,
+        tags: tags
+    })
 
 }
 

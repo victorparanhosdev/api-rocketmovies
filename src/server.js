@@ -1,4 +1,5 @@
 require("express-async-errors")
+
 const express = require("express")
 const migrationsRun = require("./database/sqlite/migrations")
 const routes = require("./routes")
@@ -22,8 +23,8 @@ app.use((error, request, response, next ) =>{
     console.log(error)
     
     return response.status(500).json({
-        status: "ERRO INTERNAL",
-        message: "Erro do servidor"
+        status: "ERRO",
+        message: "Erro internal servidor"
     })
 
  
