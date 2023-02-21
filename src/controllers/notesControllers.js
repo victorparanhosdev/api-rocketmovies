@@ -6,6 +6,9 @@ class notesControllers {
         const {title, description, rating, tags} = request.body;
         const{user_id} = request.params;
 
+
+   
+
         if(Number(rating) > 5 || Number(rating) < 0){
             throw new AppError("O rating(nota) só é entre 0 a 5")
         }
@@ -17,15 +20,24 @@ class notesControllers {
             user_id: user_id
         })
 
-        const insertTags = tags.map(tag => {
-            return {
-                note_id: notas,
-                user_id,
-                name: tag
-            }
-        })
-
+        let Tags
+        if(tags === undefined){
+            Tags = []
+        }else{
+            Tags = tags 
+            const insertTags = Tags.map(tag => {
+                return {
+                    note_id: notas,
+                    user_id,
+                    name: tag
+                }
+            })
+    
         await knex("tags").insert(insertTags);
+
+        }
+       
+  
 
         response.status(201).json()
 
@@ -55,6 +67,7 @@ class notesControllers {
 
         let notes;
 
+
         if(tags){
             const filteTags = tags.split(",").map(tag => tag.trim());
             
@@ -68,7 +81,7 @@ class notesControllers {
 
         const userTags = await knex("tags").where({user_id});
         
-        const notesWithTags = notes.map(note =>{
+        const notesWithTags = notes.map(note => {
             const noteTags = userTags.filter(tag => tag.note_id === note.id)
             return {
                 ...note,
