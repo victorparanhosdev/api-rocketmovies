@@ -130,7 +130,7 @@ async delete(request, response){
 
 async show(request, response) {
     const database = await SQLiteConnection();
-    const {id, name} = request.query
+    const {id} = request.params
 
     const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
 

@@ -4,7 +4,7 @@ const tagsControllers = new TagsControllers()
 
 const tagsRoutes = Router()
 
-tagsRoutes.get("/:id", tagsControllers.show)
+tagsRoutes.get("/:user_id", tagsControllers.show)
 
 
 

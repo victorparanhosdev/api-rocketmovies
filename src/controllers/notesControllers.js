@@ -32,12 +32,51 @@ class notesControllers {
     }
     async show(request, response){
 
-        const{user_id} = request.query;
+        const {id} = request.params;
 
-        const notas = await knex("notas").where({user_id})
+        const user = await knex("users").where({id}).first()
+        const notas = await knex("notas").where({user_id: id})
+        const tags = await knex("tags").where({user_id: id}).orderBy("name")
 
 
-        response.json(notas)
+        response.json({
+            id: id,
+            nome: user.name,
+            email: user.email,
+            notas,
+            tags
+        })
+
+    }
+    async index(request, response){
+    
+
+        const { user_id, title, tags, id } = request.query
+
+        let notes;
+
+        if(tags){
+            const filteTags = tags.split(",").map(tag => tag.trim());
+            
+            notes = await knex("tags").select(["notas.id", "notas.title", "notas.user_id"]).where("notas.user_id", user_id).whereLike("notas.title", `%${title}%`).whereIn("name", filteTags).innerJoin("notas", "notas.id", "tags.notas_id").orderBy("notas.title")
+
+        }else {
+
+            notes = await knex("notas").where({user_id})
+            .whereLike("title", `%${title}%`).orderBy("title")
+        }
+
+        const userTags = await knex("tags").where({user_id});
+        
+        const notesWithTags = notes.map(note =>{
+            const noteTags = userTags.filter(tag => tag.note_id === note.id)
+            return {
+                ...note,
+                tags: noteTags
+            }
+        })
+
+        return response.json(notesWithTags)
 
     }
 
