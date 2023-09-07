@@ -4,7 +4,7 @@ const AppError = require("../utils/AppError");
 class notesControllers {
     async create(request, response){
         const {title, description, rating, tags} = request.body;
-        const{user_id} = request.params;
+        const user_id = request.user.id
 
         if(Number(rating) > 5 || Number(rating) < 0){
             throw new AppError("O rating(nota) só é entre 0 a 5")
@@ -14,7 +14,7 @@ class notesControllers {
             title,
             description,
             rating: `${rating}/5`,
-            user_id: user_id
+            user_id
         })
 
         let Tags
@@ -36,19 +36,19 @@ class notesControllers {
        
   
 
-        response.status(201).json()
+        return response.status(201).json()
 
     }
     async show(request, response){
 
-        const {id} = request.params;
+        const user_id = request.user.id
 
-        const user = await knex("users").where({id}).first()
-        const notas = await knex("notas").where({user_id: id})
-        const tags = await knex("tags").where({user_id: id}).orderBy("name")
+        const user = await knex("users").where({user_id}).first()
+        const notas = await knex("notas").where({user_id})
+        const tags = await knex("tags").where({user_id}).orderBy("name")
 
 
-        response.json({
+        return response.json({
             id: id,
             nome: user.name,
             email: user.email,
@@ -60,8 +60,8 @@ class notesControllers {
     async index(request, response){
     
 
-        const { user_id, title, tags, id } = request.query
-
+        const { title, tags} = request.query
+        const user_id = request.user.id
         let Notas;
 
         if(tags){
@@ -96,16 +96,16 @@ class notesControllers {
             })
         
 
-        response.json(notesWithTags)
+        return response.json(notesWithTags)
 
     }
 
     async delete(request, response){
 
-        const {id} = request.params;
+        const user_id = request.user.id
 
-        await knex("notas").where({user_id: id}).delete()
-        response.json()
+        await knex("notas").where({user_id}).delete()
+        return response.json()
 
     }
 

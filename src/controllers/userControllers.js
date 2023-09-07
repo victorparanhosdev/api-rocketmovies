@@ -104,31 +104,7 @@ async delete(request, response){
 
 }
 
-async show(request, response) {
-    const database = await SQLiteConnection();
-    const user_id = request.user.id
 
-    const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
-
-    const notas = await knex("notas").where({user_id})
-    const tags = await knex("tags").where({user_id})
-
-
-
-    if(!user){
-       throw new AppError(`O usuario ${user_id} não existe!`)
-    }
-
-
-    response.json({
-        user_id,
-        Name: user.name,
-        Email: user.email,
-        notas: notas,
-        tags: tags
-    })
-
-}
 
 }
 
