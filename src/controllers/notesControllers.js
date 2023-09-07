@@ -6,9 +6,6 @@ class notesControllers {
         const {title, description, rating, tags} = request.body;
         const{user_id} = request.params;
 
-
-   
-
         if(Number(rating) > 5 || Number(rating) < 0){
             throw new AppError("O rating(nota) só é entre 0 a 5")
         }

@@ -42,44 +42,21 @@ async create(request, response){
 async update(request, response){
     
     const {name, email, password, old_password} = request.body;
-    const {id} = request.params;
+    const user_id = request.user.id;
     const database = await SQLiteConnection(); 
-    let Email;  
-
-    if(email !== undefined){
-        Email = email.toLowerCase()
-    }
     
-    const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
-
+    const user = await database.get("SELECT * FROM users WHERE id = ?", [user_id])
+  
 
     if(!user){
-        throw new AppError(`Não existe esse usuário de numero ${id}!`)
+        throw new AppError(`Usuário não existe!`)
     }
 
-    const checkEmail = await database.get("SELECT * FROM users WHERE email = (?)", [Email])
-   
+    const CheckEmail = await database.get("SELECT * FROM users WHERE email = ?", [email])
 
-    if(checkEmail && user.email === Email) {
-        throw new AppError("Este email é do seu proprio Usuario")
+    if(CheckEmail && user.id !== user_id){
+        throw new AppError("Email ja existe em outro usuário")
     }
-
-    if(checkEmail && user.id !== id){
-        throw new AppError("Este email já existe cadastrado em outro usuário")
-    }
-
-    
-    if(email === undefined || null){
-        user.email = user.email
-    }else {
-        user.email = email.toLowerCase()
-    }
-     
-    if(name === undefined || null){
-        user.name = user.name
-    }else {
-        user.name = name
-    }  
     
     if(password && !old_password){
         throw new AppError("É necesario digitar a senha antiga")
@@ -87,41 +64,40 @@ async update(request, response){
 
     if(password && old_password){
         const chekPassword = await compare(old_password, user.password)
-        const semCripto = old_password != user.password
-        if(!chekPassword && semCripto ){
+        if(!chekPassword){
             throw new AppError("Senha incorreta")
         }
 
         user.password = await hash(password, 8)
     }
 
-
+    user.email =  email ?? user.email
+    user.name = name ?? user.name
     
     await database.run(`UPDATE users SET 
     name = ?,
     email = ?,
     password = ?,
     updated_at = DATETIME('now', 'localtime')
-    WHERE id = ?`, [user.name, user.email, user.password, id]);
+    WHERE id = ?`, [user.name, user.email, user.password, user_id]);
   
 
-   return response.send("atualizado com sucesso")
+   return response.json({user})
 
 }
 
 async delete(request, response){
     const database = await SQLiteConnection();
-    const {id} = request.params;
+    const user_id = request.user.id;
     
-    const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
+    const user = await database.get("SELECT * FROM users WHERE id = ?", [user_id])
 
     if(!user){
-        throw new AppError(`O usuario ${id} não existe!`)
+        throw new AppError(`O usuario não existe!`)
     }
 
-    await database.run("DELETE FROM users WHERE id = ?", [id])
+    await database.run("DELETE FROM users WHERE id = ?", [user_id])
         response.json({
-            usuario: id,
             message: "deletado com sucesso"
         });
       
@@ -130,22 +106,22 @@ async delete(request, response){
 
 async show(request, response) {
     const database = await SQLiteConnection();
-    const {id} = request.params
+    const user_id = request.user.id
 
     const user = await database.get("SELECT * FROM users WHERE id = ?", [id])
 
-    const notas = await knex("notas").where({user_id: id})
-    const tags = await knex("tags").where({user_id: id})
+    const notas = await knex("notas").where({user_id})
+    const tags = await knex("tags").where({user_id})
 
 
 
     if(!user){
-       throw new AppError(`O usuario ${id} não existe!`)
+       throw new AppError(`O usuario ${user_id} não existe!`)
     }
 
 
     response.json({
-        id,
+        user_id,
         Name: user.name,
         Email: user.email,
         notas: notas,
