@@ -31,11 +31,7 @@ async create(request, response){
     const crypto = await hash(password, 8)
     await database.run("INSERT INTO users (name, email, password, updated_at) VALUES (?, ?, ?, NULL)", [name, Email, crypto])
 
-    response.status(201).json({
-        message: "Cadastro Realizado com sucesso",
-        Nome: name,
-        Email: Email
-    })
+    return response.status(201).json()
 
 }
 
