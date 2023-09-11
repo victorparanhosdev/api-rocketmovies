@@ -10,30 +10,25 @@ class notesControllers {
             throw new AppError("O rating(nota) só é entre 0 a 5")
         }
 
-        const notas = await knex("notas").insert({
+        const [notas] = await knex("notas").insert({
             title,
             description,
             rating: `${rating}/5`,
             user_id
         })
 
-        let Tags
-        if(tags === undefined){
-            Tags = []
-        }else{
-            Tags = tags 
-            const insertTags = Tags.map(tag => {
+        if(tags){
+            const insertTags = tags.map(tag => {
                 return {
                     note_id: notas,
                     user_id,
                     name: tag
                 }
             })
-    
-        await knex("tags").insert(insertTags);
-
+            await knex("tags").insert(insertTags);
         }
-       
+
+      
   
 
         return response.status(201).json()
@@ -41,21 +36,17 @@ class notesControllers {
     }
     async show(request, response){
 
-        const user_id = request.user.id
+        const {id} = request.params
+   
 
-        const user = await knex("users").where({user_id}).first()
-        const notas = await knex("notas").where({user_id})
-        const tags = await knex("tags").where({user_id}).orderBy("name")
+        const notas = await knex("notas").where({id}).first()
+        const tags = await knex("tags").where({note_id: id}).orderBy("name")
 
 
         return response.json({
-            id: id,
-            nome: user.name,
-            email: user.email,
-            notas,
+            ...notas,
             tags
         })
-
     }
     async index(request, response){
     
@@ -102,9 +93,8 @@ class notesControllers {
 
     async delete(request, response){
 
-        const user_id = request.user.id
-
-        await knex("notas").where({user_id}).delete()
+        const {id} = request.params
+        await knex("notas").where({id}).delete()
         return response.json()
 
     }
