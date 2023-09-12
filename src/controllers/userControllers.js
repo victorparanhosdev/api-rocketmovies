@@ -74,7 +74,7 @@ async update(request, response){
     name = ?,
     email = ?,
     password = ?,
-    updated_at = DATETIME('now', 'localtime')
+    updated_at = strftime('%d-%m-%Y %H:%M:%S', 'now', 'localtime')
     WHERE id = ?`, [user.name, user.email, user.password, user_id]);
   
 
