@@ -27,6 +27,7 @@
     "express-async-errors": "^3.1.1",
     "jsonwebtoken": "^9.0.2",
     "knex": "^2.4.2",
+    "moment-timezone": "^0.5.43",
     "multer": "^1.4.5-lts.1",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4"
