@@ -9,6 +9,7 @@ class notesControllers {
         if(Number(rating) > 5 || Number(rating) < 0){
             throw new AppError("O rating(nota) só é entre 0 a 5")
         }
+    
 
         const [notas] = await knex("notas").insert({
             title,
@@ -63,7 +64,7 @@ class notesControllers {
             .select(["notas.id", "notas.title", "notas.description", "notas.rating", "notas.user_id", ])
             .where("notas.user_id", user_id)
             .whereLike("notas.title", `%${title}%`)
-            .whereIn("name", FilterTags).innerJoin("notas", "notas.id", "tags.note_id")
+            .whereIn("name", FilterTags).groupBy("notas.id").innerJoin("notas", "notas.id", "tags.note_id")
 
 
         }else{
